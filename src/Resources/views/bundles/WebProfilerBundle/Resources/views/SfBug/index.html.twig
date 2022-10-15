@@ -1,0 +1,49 @@
+{% block head %}
+    <style>
+        {{ include('@WebProfiler/SfBug/style.css') }}
+    </style>
+{% endblock %}
+
+<div id="header">
+    <h1>{{ source('@WebProfiler/Icon/symfony.svg') }} Symfony <span>Profiler</span>&nbsp;<span style="color: var(--color-muted); font-size: 12px;">with sfBug</span></h1>
+    <div class="sf-bug-icon" onclick="sfBugDialogToggle()"> </div>
+</div>
+
+{% block sfdialog %}
+    <div class="sf-bug">
+        <div id="sf-bug-dialog" class="dialog dialog-hide"  onclick="sfBugDialogToggle()">
+            <div class="dialog-container">
+                <div class="dialog-header stopPropagation" >
+                    <div class="flex-align-center"> <div class="sf-bug-icon"> </div> <span style="font-size: 14px"><b>sfBug</b> - share profiler</span></div>
+                    <button onclick="sfBugDialogToggle()" class="close-modal">×</button>
+                </div>
+                <div  class="dialog-content stopPropagation">
+                        {% if app.request.get('token') and app.request.get('token') !='empty' %}
+                            {{ render(controller('Emrdev\\SfBugBundle\\Controller\\SfbugController::getFormView', {'token': app.request.get('token')})) }}
+                        {% else %}
+                            {{ include('@WebProfiler/SfBug/not_found.html.twig') }}
+                        {% endif %}
+                    <div class="dialog_footer">
+                        <p>Copyright ©  {{ 'now' | date('Y') }}. All rights reserved.</p>
+                        <p>Support project: <a target="_blank" href="https://sfbug.io/">sfbug.io</a></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <script>
+        function sfBugDialogToggle(){
+            document.getElementById('sf-bug-dialog').classList.toggle('dialog-hide')
+        }
+
+        document.querySelectorAll('.sf-bug .stopPropagation').forEach(function(element) {
+            element.addEventListener("click", function(event) {
+                event.stopPropagation();
+            });
+        });
+    </script>
+{% endblock %}

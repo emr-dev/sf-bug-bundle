@@ -1,0 +1,77 @@
+<form id="sfBugShareForm">
+
+    {% if templates is defined %}
+        <div class="setting">
+            {% for name, template in templates %}
+                {% set menu -%}
+                    {%- if block('menu', template) is defined -%}
+                        {% with { collector: profile.getcollector(name), profiler_markup_version: profiler_markup_version } %}
+                            {{- block('menu', template) -}}
+                        {% endwith %}
+                    {%- endif -%}
+                {%- endset %}
+
+                {% if menu is not empty %}
+                    <div class="switchContainer">
+                        <label class="switch switch-success">
+                            <input {% if '@WebProfiler/Collector' in template %} checked {% endif %} name="panels[{{ name }}]" type="checkbox">
+                            <span class="slider round"></span>
+                            <span class="label right">
+                       {{ menu|raw }}
+                    </span>
+                        </label>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <p id="sf-bug-message" class="message error">error message</p>
+
+    <input type="hidden" name="token" value="{{ app.request.get('token') }}">
+    <button type="submit" id="sfBugShareButton" class="btn"><div id="sfBugLoader"></div>Generate share link</button>
+</form>
+<div class="input-area">
+    <input class="link-area" id="sf-bug-link-place" disabled type="text" placeholder="Your link will be here">
+</div>
+
+<script>
+    document.getElementById('sfBugShareForm').addEventListener("submit", function (e) {
+        e.preventDefault();
+        document.getElementById('sfBugShareButton').disabled = true;
+        document.getElementById('sfBugLoader').classList.add('loader');
+        document.getElementById('sf-bug-message').innerText = null;
+        const urlencoded = new URLSearchParams(new FormData(e.target));
+        const headers = new Headers();
+        headers.append("Content-Type", "application/x-www-form-urlencoded");
+        const requestOptions = {
+            method: 'POST', credentials: "same-origin",
+            headers: headers,
+            body: urlencoded,
+            redirect: 'follow'
+        };
+
+        fetch('{{ path('sfbug_share') }}', requestOptions)
+            .then(response => {
+                document.getElementById('sfBugShareButton').disabled = false;
+                document.getElementById('sfBugLoader').classList.remove('loader');
+                if (response.ok) {
+                    return response.json();
+                }
+                return Promise.reject(response);
+            })
+            .then(function (json) {
+                document.getElementById('sf-bug-message').classList.remove('error');
+                document.getElementById('sf-bug-message').style.display = 'block';
+                document.getElementById('sf-bug-message').innerText = 'Link successfully generated';
+                document.getElementById('sf-bug-link-place').value = json.link;
+            })
+            .catch(error => {
+                document.getElementById('sf-bug-message').style.display = 'block';
+                document.getElementById('sf-bug-message').classList.add('error')
+                document.getElementById('sf-bug-message').innerText = error.statusText;
+                document.getElementById('sf-bug-link-place').value = null;
+            });
+
+    });
+</script>

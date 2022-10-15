@@ -1,0 +1,3 @@
+SfBugBundle:
+    resource: "@SfBugBundle/Controller/SfbugController.php"
+    type: annotation
